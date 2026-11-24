@@ -48,9 +48,13 @@ The watchdog this panel controls comes with [Uber Watch for the desktop](https:/
 | `~/.local/state/strata/no-resume` | exists = do not continue cut-off sessions after a model restart or a crash |
 | `~/.local/state/strata/no-resume-reboot` | exists = do not continue sessions after a reboot, a logout or a restart of the watchdog |
 
+## Updating
+
+At the bottom of the panel, **Plugin update** shows the installed and the latest version and has an Update button that installs the latest GitHub release. The plugin runs with root rights for that (it replaces its own files); its service commands run as your user. A release must carry a zip named `Uber-Watch.zip` with the folder `Uber Watch/` inside.
+
 ## More from Ubermoc
 
-At the bottom of the panel, **Downloads: more Uber apps for game mode** opens a list: the desktop version of Uber Watch first, then the other Decky Loader plugins (Ubermoc Speech and the Ubermoc Warcraft Mod Updater). Tapping one opens its GitHub page.
+Under the update section, **Downloads: more Uber apps for game mode** opens a list: the desktop version of Uber Watch first, then the other Decky Loader plugins (Ubermoc Speech and the Ubermoc Warcraft Mod Updater). Tapping one opens its GitHub page.
 
 ## Build the plugin
 

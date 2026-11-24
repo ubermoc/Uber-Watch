@@ -1,4 +1,4 @@
-import { ButtonItem, Navigation, PanelSection, PanelSectionRow, ToggleField, staticClasses } from "@decky/ui";
+import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField, staticClasses } from "@decky/ui";
 import { callable, definePlugin } from "@decky/api";
 import { useEffect, useState } from "react";
 import { FaShieldAlt } from "react-icons/fa";
@@ -14,6 +14,52 @@ const pause = callable<[], Result>("pause");
 const resume = callable<[], Result>("resume");
 const unload = callable<[], Result>("unload");
 const reload = callable<[], Result>("reload");
+type UpdateInfo = { ok: boolean; current: string; latest?: string; available?: boolean; error?: string };
+const checkUpdate = callable<[], UpdateInfo>("check_update");
+const installUpdate = callable<[], Result & { version?: string }>("install_update");
+
+// Decky's own routes (not a documented plugin API), so a missing global ends in a clear message.
+function deckyCall(route: string, ...args: unknown[]): Promise<unknown> {
+  const backend = (window as unknown as { DeckyBackend?: { call: (r: string, ...a: unknown[]) => Promise<unknown> } }).DeckyBackend;
+  if (!backend?.call) throw new Error("This version of Decky can't reload plugins.");
+  return backend.call(route, ...args);
+}
+
+function PluginUpdate() {
+  const [info, setInfo] = useState<UpdateInfo | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [restart, setRestart] = useState(false);
+  useEffect(() => { checkUpdate().then(setInfo).catch(() => setError("Couldn't check for updates.")); }, []);
+  const update = async () => {
+    setBusy(true); setError("");
+    try {
+      const r = await installUpdate();
+      if (!r.ok) throw new Error(r.error ?? "The update failed.");
+      await deckyCall("loader/reload_plugin", "Uber Watch");
+      setTimeout(() => { setBusy(false); setRestart(true); }, 45000);
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); setBusy(false); setRestart(true); }
+  };
+  return (
+    <PanelSection title="Plugin update">
+      <PanelSectionRow><Field label="Current version" bottomSeparator="none">{info?.current ?? "..."}</Field></PanelSectionRow>
+      <PanelSectionRow><Field label="Latest version" bottomSeparator="none">{info ? info.latest || "unknown" : "..."}</Field></PanelSectionRow>
+      {(error || info?.error) && <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>{error || info?.error}</div></PanelSectionRow>}
+      <PanelSectionRow>
+        <ButtonItem layout="below" disabled={busy || !info?.available} onClick={update}>
+          {busy ? "Updating..." : info?.available ? "Update" : "Up to date"}
+        </ButtonItem>
+      </PanelSectionRow>
+      {restart && (
+        <PanelSectionRow>
+          <ButtonItem layout="below" description="Didn't update? This restarts Decky and Steam's interface."
+            onClick={() => { try { deckyCall("updater/do_restart"); } catch { /* shown above next time */ } }}>Restart Decky Loader</ButtonItem>
+        </PanelSectionRow>
+      )}
+    </PanelSection>
+  );
+}
+
 const setNoResume = callable<[boolean, boolean], Result>("set_no_resume");
 
 const APPS: { name: string; what: string; url: string }[] = [
@@ -71,6 +117,12 @@ function Content() {
             description="Loads the last model again. If Unload paused Uber Watch, it starts watching again.">Reload model</ButtonItem>
         </PanelSectionRow>
       </PanelSection>
+      {(msg || s?.log) && (
+        <PanelSection>
+          <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>{msg || s?.log}</div></PanelSectionRow>
+        </PanelSection>
+      )}
+      <PluginUpdate />
       <PanelSection title="More from Ubermoc">
         <PanelSectionRow>
           <ButtonItem layout="below" onClick={() => setMore(!more)}>
@@ -85,11 +137,6 @@ function Content() {
           </PanelSectionRow>
         ))}
       </PanelSection>
-      {(msg || s?.log) && (
-        <PanelSection>
-          <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>{msg || s?.log}</div></PanelSectionRow>
-        </PanelSection>
-      )}
     </>
   );
 }

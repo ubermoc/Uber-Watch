@@ -87,6 +87,52 @@ const pause = callable("pause");
 const resume = callable("resume");
 const unload = callable("unload");
 const reload = callable("reload");
+const checkUpdate = callable("check_update");
+const installUpdate = callable("install_update");
+// Decky's own routes (not a documented plugin API), so a missing global ends in a clear message.
+function deckyCall(route, ...args) {
+    const backend = window.DeckyBackend;
+    if (!backend?.call)
+        throw new Error("This version of Decky can't reload plugins.");
+    return backend.call(route, ...args);
+}
+function PluginUpdate() {
+    const [info, setInfo] = SP_REACT.useState(null);
+    const [error, setError] = SP_REACT.useState("");
+    const [busy, setBusy] = SP_REACT.useState(false);
+    const [restart, setRestart] = SP_REACT.useState(false);
+    SP_REACT.useEffect(() => { checkUpdate().then(setInfo).catch(() => setError("Couldn't check for updates.")); }, []);
+    const update = async () => {
+        setBusy(true);
+        setError("");
+        try {
+            const r = await installUpdate();
+            if (!r.ok)
+                throw new Error(r.error ?? "The update failed.");
+            await deckyCall("loader/reload_plugin", "Uber Watch");
+            setTimeout(() => { setBusy(false); setRestart(true); }, 45000);
+        }
+        catch (e) {
+            setError(e instanceof Error ? e.message : String(e));
+            setBusy(false);
+            setRestart(true);
+        }
+    };
+    return (window.SP_REACT.createElement(DFL.PanelSection, { title: "Plugin update" },
+        window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement(DFL.Field, { label: "Current version", bottomSeparator: "none" }, info?.current ?? "...")),
+        window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement(DFL.Field, { label: "Latest version", bottomSeparator: "none" }, info ? info.latest || "unknown" : "...")),
+        (error || info?.error) && window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, error || info?.error)),
+        window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: busy || !info?.available, onClick: update }, busy ? "Updating..." : info?.available ? "Update" : "Up to date")),
+        restart && (window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", description: "Didn't update? This restarts Decky and Steam's interface.", onClick: () => { try {
+                    deckyCall("updater/do_restart");
+                }
+                catch { /* shown above next time */ } } }, "Restart Decky Loader")))));
+}
 const setNoResume = callable("set_no_resume");
 const APPS = [
     { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
@@ -138,14 +184,15 @@ function Content() {
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !s?.loaded, onClick: () => act(unload), description: "Unloads the model to free memory and pauses Uber Watch, so it doesn't load the model again." }, "Unload model")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !!s?.loaded, onClick: () => act(reload), description: "Loads the last model again. If Unload paused Uber Watch, it starts watching again." }, "Reload model"))),
+        (msg || s?.log) && (window.SP_REACT.createElement(DFL.PanelSection, null,
+            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log)))),
+        window.SP_REACT.createElement(PluginUpdate, null),
         window.SP_REACT.createElement(DFL.PanelSection, { title: "More from Ubermoc" },
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", onClick: () => setMore(!more) }, more ? "Hide the list" : "Downloads: more Uber apps for game mode")),
             more && APPS.map((a) => (window.SP_REACT.createElement(DFL.PanelSectionRow, { ...{ key: a.url } },
-                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", description: a.what, onClick: () => DFL.Navigation.NavigateToExternalWeb(a.url) }, a.name))))),
-        (msg || s?.log) && (window.SP_REACT.createElement(DFL.PanelSection, null,
-            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
-                window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log))))));
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", description: a.what, onClick: () => DFL.Navigation.NavigateToExternalWeb(a.url) }, a.name)))))));
 }
 var index = definePlugin(() => ({
     name: "Uber Watch",

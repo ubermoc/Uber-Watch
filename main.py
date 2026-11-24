@@ -5,10 +5,18 @@ import asyncio
 import json
 import os
 import pwd
+import re
+import ssl
 import subprocess
+import urllib.request
+import zipfile
 
 import decky
 
+PLUGIN_NAME = "Uber Watch"
+PLUGIN_REPO = "ubermoc/Uber-Watch"
+PLUGIN_ASSET = "Uber-Watch.zip"
+PLUGIN_FILES = ("plugin.json", "package.json", "main.py", "dist/index.js")
 UNIT = "strata-watchdog.service"
 HOME = decky.DECKY_USER_HOME
 STRATA = os.path.join(HOME, ".local/bin/strata")
@@ -27,8 +35,26 @@ def _env():
     return env
 
 
+def _pw():
+    return pwd.getpwnam(decky.DECKY_USER)
+
+
 def _run(args, timeout=30):
+    """Runs as the desktop user (this plugin runs as root so it can replace its own files)."""
+    if os.geteuid() == 0:
+        args = ["runuser", "-u", decky.DECKY_USER, "--", "env",
+                f"HOME={HOME}", f"XDG_RUNTIME_DIR={_env()['XDG_RUNTIME_DIR']}",
+                f"DBUS_SESSION_BUS_ADDRESS={_env()['DBUS_SESSION_BUS_ADDRESS']}", *args]
     return subprocess.run(args, capture_output=True, text=True, timeout=timeout, env=_env())
+
+
+def _own(path):
+    """Files made by this (root) backend belong to the desktop user, so the tray and the watchdog can change them."""
+    try:
+        pw = _pw()
+        os.chown(path, pw.pw_uid, pw.pw_gid)
+    except OSError:
+        pass
 
 
 def _sc(*a):
@@ -49,6 +75,7 @@ def _save(**kw):
     os.makedirs(STATE_DIR, exist_ok=True)
     with open(STATE, "w") as f:
         json.dump(s, f)
+    _own(STATE)
 
 
 def _service_preset():
@@ -129,10 +156,84 @@ class Plugin:
             os.makedirs(STATE_DIR, exist_ok=True)
             if on:
                 open(flag, "w").close()
+                _own(flag)
             elif os.path.exists(flag):
                 os.remove(flag)
             return {"ok": True}
         return await self._off(work)
+
+    # ---------- the plugin itself ----------
+    @staticmethod
+    def _version_tuple(text):
+        return tuple(int(n) for n in re.findall(r"\d+", text)[:3])
+
+    @staticmethod
+    def _installed_version():
+        try:
+            with open(os.path.join(decky.DECKY_PLUGIN_DIR, "package.json")) as f:
+                return json.load(f).get("version", "unknown")
+        except (OSError, ValueError):
+            return "unknown"
+
+    @staticmethod
+    def _ctx():
+        for path in ("/etc/ssl/certs/ca-certificates.crt", "/etc/ca-certificates/extracted/tls-ca-bundle.pem", "/etc/ssl/cert.pem"):
+            if os.path.exists(path):
+                return ssl.create_default_context(cafile=path)
+        return ssl.create_default_context()
+
+    def _latest_release(self):
+        req = urllib.request.Request(f"https://api.github.com/repos/{PLUGIN_REPO}/releases/latest",
+                                     headers={"User-Agent": "uber-watch", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, context=self._ctx(), timeout=20) as r:
+            return json.loads(r.read().decode())
+
+    async def check_update(self) -> dict:
+        current = self._installed_version()
+        try:
+            rel = await self._off(self._latest_release)
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "current": current, "error": "Couldn't reach GitHub."}
+        latest = rel.get("tag_name", "").lstrip("v")
+        return {"ok": True, "current": current, "latest": latest,
+                "available": self._version_tuple(latest) > self._version_tuple(current)}
+
+    async def install_update(self) -> dict:
+        def work():
+            rel = self._latest_release()
+            asset = next((a for a in rel.get("assets", []) if a.get("name") == PLUGIN_ASSET), None)
+            if asset is None:
+                return {"ok": False, "error": "The latest release has no plugin zip."}
+            req = urllib.request.Request(asset["browser_download_url"], headers={"User-Agent": "uber-watch"})
+            tmp = os.path.join(decky.DECKY_PLUGIN_RUNTIME_DIR, PLUGIN_ASSET)
+            os.makedirs(decky.DECKY_PLUGIN_RUNTIME_DIR, exist_ok=True)
+            with urllib.request.urlopen(req, context=self._ctx(), timeout=120) as r, open(tmp, "wb") as out:
+                out.write(r.read())
+            prefix = PLUGIN_NAME + "/"
+            with zipfile.ZipFile(tmp) as z:
+                if z.testzip() is not None:
+                    return {"ok": False, "error": "The update download is damaged."}
+                names = z.namelist()
+                if any(".." in n.split("/") or n.startswith("/") for n in names):
+                    return {"ok": False, "error": "The update contains an unsafe path."}
+                if any(prefix + f not in names for f in PLUGIN_FILES):
+                    return {"ok": False, "error": "The update is missing files."}
+                if json.loads(z.read(prefix + "plugin.json")).get("name") != PLUGIN_NAME:
+                    return {"ok": False, "error": "The update is for a different plugin."}
+                for m in z.infolist():
+                    if not m.filename.startswith(prefix) or m.is_dir():
+                        continue
+                    dest = os.path.join(decky.DECKY_PLUGIN_DIR, m.filename[len(prefix):])
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    with open(dest + ".new", "wb") as out:
+                        out.write(z.read(m))
+                    os.replace(dest + ".new", dest)
+            return {"ok": True, "version": rel.get("tag_name", "").lstrip("v")}
+        try:
+            return await self._off(work)
+        except Exception:  # noqa: BLE001
+            decky.logger.exception("update failed")
+            return {"ok": False, "error": "The update failed. Try again."}
 
     async def unload(self) -> dict:
         def work():

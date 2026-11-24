@@ -1,10 +1,14 @@
 {
   "name": "Uber Watch",
   "author": "ubermoc",
-  "flags": [],
+  "flags": [
+    "root"
+  ],
   "api_version": 1,
   "publish": {
-    "tags": ["utility"],
+    "tags": [
+      "utility"
+    ],
     "description": "Pause or resume the model watchdog, unload and reload the local model, and choose whether cut-off sessions resume by themselves.",
     "image": ""
   }
