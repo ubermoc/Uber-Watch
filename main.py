@@ -22,6 +22,7 @@ HOME = decky.DECKY_USER_HOME
 STRATA = os.path.join(HOME, ".local/bin/strata")
 STATE_DIR = os.path.join(HOME, ".local/state/strata")
 STATE = os.path.join(STATE_DIR, "tray-state.json")  # shared with the tray icon
+PAUSED = os.path.join(STATE_DIR, "paused")  # exists = paused: the watchdog idles, across reboots and mode switches
 NO_RESUME = os.path.join(STATE_DIR, "no-resume")  # no resume after a model restart or a crash
 NO_RESUME_BOOT = os.path.join(STATE_DIR, "no-resume-reboot")  # no resume after a reboot or a restart of the watchdog
 LOG = os.path.join(STATE_DIR, "watchdog.log")
@@ -78,6 +79,19 @@ def _save(**kw):
     _own(STATE)
 
 
+def _watching():
+    return _sc("is-active", UNIT).stdout.strip() == "active" and not os.path.exists(PAUSED)
+
+
+def _set_paused(on):
+    os.makedirs(STATE_DIR, exist_ok=True)
+    if on:
+        open(PAUSED, "w").close()
+        _own(PAUSED)
+    elif os.path.exists(PAUSED):
+        os.remove(PAUSED)
+
+
 def _service_preset():
     for part in _sc("show", UNIT, "-p", "Environment").stdout.replace("Environment=", "").split():
         if part.startswith("STRATA_PRESET="):
@@ -125,7 +139,7 @@ class Plugin:
             if preset:
                 _save(last_preset=preset)
             return {
-                "watching": _sc("is-active", UNIT).stdout.strip() == "active",
+                "watching": _watching(),
                 "loaded": preset is not None,
                 "model": text,
                 "preset": preset,
@@ -138,14 +152,15 @@ class Plugin:
 
     async def pause(self) -> dict:
         def work():
-            _sc("stop", UNIT)
+            _set_paused(True)
             _save(paused_by_unload=False)
             return {"ok": True}
         return await self._off(work)
 
     async def resume(self) -> dict:
         def work():
-            _sc("start", UNIT)
+            _set_paused(False)
+            _sc("start", UNIT)  # in case the service itself was stopped
             _save(paused_by_unload=False)
             return {"ok": True}
         return await self._off(work)
@@ -238,8 +253,8 @@ class Plugin:
     async def unload(self) -> dict:
         def work():
             preset = _model()[0] or _service_preset()
-            was_on = _sc("is-active", UNIT).stdout.strip() == "active"
-            _sc("stop", UNIT)  # first: a running watchdog would load the model again
+            was_on = _watching()
+            _set_paused(True)  # first: a running watchdog would load the model again (lasts across reboots and mode switches)
             _save(last_preset=preset, paused_by_unload=was_on)
             Plugin.busy = "Unloading"
             try:
@@ -264,6 +279,7 @@ class Plugin:
             if r.returncode != 0:
                 return {"ok": False, "error": f"Loading failed (exit {r.returncode})."}
             if _state().get("paused_by_unload"):
+                _set_paused(False)
                 _sc("start", UNIT)
                 _save(paused_by_unload=False)
             return {"ok": True}

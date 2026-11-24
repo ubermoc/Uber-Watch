@@ -171,7 +171,7 @@ function Content() {
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", null, s ? (s.watching ? "Watching" : "Paused") : "Checking...")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null, s?.watching
-                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause), description: "Stops watching. The model keeps running, but nothing restarts it if it fails." }, "Pause Uber Watch")
+                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause), description: "Stops watching, even after a reboot or a mode switch, until you resume. The model keeps running." }, "Pause Uber Watch")
                 : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume), description: "Starts watching again: restarts the model if it fails and continues cut-off sessions." }, "Resume Uber Watch")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume after a reboot", checked: !!s?.no_resume_boot, description: "On: after a reboot or logout, sessions stay stopped until you continue them.", onChange: (v) => act(() => setNoResume(v, true)) })),

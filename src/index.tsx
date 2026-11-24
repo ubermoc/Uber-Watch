@@ -91,7 +91,7 @@ function Content() {
         <PanelSectionRow>
           {s?.watching
             ? <ButtonItem layout="below" disabled={off} onClick={() => act(pause)}
-                description="Stops watching. The model keeps running, but nothing restarts it if it fails.">Pause Uber Watch</ButtonItem>
+                description="Stops watching, even after a reboot or a mode switch, until you resume. The model keeps running.">Pause Uber Watch</ButtonItem>
             : <ButtonItem layout="below" disabled={off} onClick={() => act(resume)}
                 description="Starts watching again: restarts the model if it fails and continues cut-off sessions.">Resume Uber Watch</ButtonItem>}
         </PanelSectionRow>
