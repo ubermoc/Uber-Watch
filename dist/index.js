@@ -88,7 +88,15 @@ const resume = callable("resume");
 const unload = callable("unload");
 const reload = callable("reload");
 const setNoResume = callable("set_no_resume");
+const APPS = [
+    { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
+    { name: "Ubermoc Speech", what: "Hold a button, speak, and your words are typed into any app.", url: "https://github.com/ubermoc/Ubermoc-Speech" },
+    { name: "Ubermoc Warcraft Mod Updater", what: "Updates the Ubermoc addons for World of Warcraft.", url: "https://github.com/ubermoc/Ubermoc-Warcraft-Mod-Updater" },
+    { name: "Ubermoc UI", what: "A controller-first World of Warcraft interface.", url: "https://github.com/ubermoc/Ubermoc-UI" },
+    { name: "Ubermoc Forever", what: "A controller-first default look for World of Warcraft: Forever.", url: "https://github.com/ubermoc/Ubermoc-Forever" },
+];
 function Content() {
+    const [more, setMore] = SP_REACT.useState(false);
     const [s, setS] = SP_REACT.useState(null);
     const [msg, setMsg] = SP_REACT.useState("");
     const [working, setWorking] = SP_REACT.useState(false);
@@ -130,6 +138,11 @@ function Content() {
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !s?.loaded, onClick: () => act(unload), description: "Unloads the model to free memory and pauses Uber Watch, so it doesn't load the model again." }, "Unload model")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !!s?.loaded, onClick: () => act(reload), description: "Loads the last model again. If Unload paused Uber Watch, it starts watching again." }, "Reload model"))),
+        window.SP_REACT.createElement(DFL.PanelSection, { title: "More from Ubermoc" },
+            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", onClick: () => setMore(!more) }, more ? "Hide downloads" : "Downloads: additional Uber apps")),
+            more && APPS.map((a) => (window.SP_REACT.createElement(DFL.PanelSectionRow, { ...{ key: a.url } },
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", description: a.what, onClick: () => DFL.Navigation.NavigateToExternalWeb(a.url) }, a.name))))),
         (msg || s?.log) && (window.SP_REACT.createElement(DFL.PanelSection, null,
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log))))));

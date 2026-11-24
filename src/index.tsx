@@ -1,4 +1,4 @@
-import { ButtonItem, PanelSection, PanelSectionRow, ToggleField, staticClasses } from "@decky/ui";
+import { ButtonItem, Navigation, PanelSection, PanelSectionRow, ToggleField, staticClasses } from "@decky/ui";
 import { callable, definePlugin } from "@decky/api";
 import { useEffect, useState } from "react";
 import { FaShieldAlt } from "react-icons/fa";
@@ -16,7 +16,16 @@ const unload = callable<[], Result>("unload");
 const reload = callable<[], Result>("reload");
 const setNoResume = callable<[boolean], Result>("set_no_resume");
 
+const APPS: { name: string; what: string; url: string }[] = [
+  { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
+  { name: "Ubermoc Speech", what: "Hold a button, speak, and your words are typed into any app.", url: "https://github.com/ubermoc/Ubermoc-Speech" },
+  { name: "Ubermoc Warcraft Mod Updater", what: "Updates the Ubermoc addons for World of Warcraft.", url: "https://github.com/ubermoc/Ubermoc-Warcraft-Mod-Updater" },
+  { name: "Ubermoc UI", what: "A controller-first World of Warcraft interface.", url: "https://github.com/ubermoc/Ubermoc-UI" },
+  { name: "Ubermoc Forever", what: "A controller-first default look for World of Warcraft: Forever.", url: "https://github.com/ubermoc/Ubermoc-Forever" },
+];
+
 function Content() {
+  const [more, setMore] = useState(false);
   const [s, setS] = useState<Status | null>(null);
   const [msg, setMsg] = useState("");
   const [working, setWorking] = useState(false);
@@ -58,6 +67,20 @@ function Content() {
           <ButtonItem layout="below" disabled={off || !!s?.loaded} onClick={() => act(reload)}
             description="Loads the last model again. If Unload paused Uber Watch, it starts watching again.">Reload model</ButtonItem>
         </PanelSectionRow>
+      </PanelSection>
+      <PanelSection title="More from Ubermoc">
+        <PanelSectionRow>
+          <ButtonItem layout="below" onClick={() => setMore(!more)}>
+            {more ? "Hide downloads" : "Downloads: additional Uber apps"}
+          </ButtonItem>
+        </PanelSectionRow>
+        {more && APPS.map((a) => (
+          <PanelSectionRow {...({ key: a.url } as object)}>
+            <ButtonItem layout="below" description={a.what} onClick={() => Navigation.NavigateToExternalWeb(a.url)}>
+              {a.name}
+            </ButtonItem>
+          </PanelSectionRow>
+        ))}
       </PanelSection>
       {(msg || s?.log) && (
         <PanelSection>

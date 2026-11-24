@@ -1,13 +1,13 @@
 # Uber Watch
 
-Keeps your local model server up, and gives you buttons for it: in **game mode** (Decky Loader plugin) and on the **desktop** (tray icon).
+Keeps your local model server up, with buttons for it in **game mode** (this Decky Loader plugin).
+
+> **Want it on your Linux desktop too?** Use [Uber Watch for the desktop](https://github.com/ubermoc/Uber-Watch-Desktop): the watchdog itself and a tray icon. This panel controls the watchdog that the desktop version installs.
 
 Built for the Strata local model server on Linux (Steam Deck and other handhelds included). Works with any setup where the model is started by `strata launch --preset <name>`.
 
 ![Game mode panel](images/game-mode-panel.png)
-![Tray menu](images/tray-menu.png)
-
-*The pictures are renderings of the real menus and their labels, not screen captures.*
+*The picture is a rendering of the real panel and its labels, not a screen capture.*
 
 ## What it does
 
@@ -36,21 +36,7 @@ git clone https://github.com/ubermoc/Uber-Watch && cd Uber-Watch && bash install
 
 Or download the zip from the latest release and unpack it into `~/homebrew/plugins/`, then restart Decky.
 
-**Desktop part** (watchdog, service and tray icon; no sudo):
-
-```bash
-bash desktop/install.sh
-mkdir -p ~/.config/systemd/user/strata-watchdog.service.d
-cp desktop/settings.example.conf ~/.config/systemd/user/strata-watchdog.service.d/10-settings.conf
-```
-
-Edit `10-settings.conf` (preset, model name, address), then:
-
-```bash
-systemctl --user enable --now strata-watchdog
-```
-
-The tray icon needs `python-gobject` and `libayatana-appindicator`. It starts at your next login, or run `python3 ~/.local/share/uber-watch/uber-watch-tray.py &`.
+The watchdog this panel controls comes with [Uber Watch for the desktop](https://github.com/ubermoc/Uber-Watch-Desktop); install that first.
 
 ## Files it uses
 
@@ -59,6 +45,10 @@ The tray icon needs `python-gobject` and `libayatana-appindicator`. It starts at
 | `~/.local/state/strata/watchdog.log` | what the watchdog did |
 | `~/.local/state/strata/tray-state.json` | the last loaded preset (shared by the tray and the panel) |
 | `~/.local/state/strata/no-resume` | exists = never continue sessions by itself |
+
+## More from Ubermoc
+
+At the bottom of the panel, **Downloads: additional Uber apps** opens a list with the desktop version of Uber Watch first, then Ubermoc Speech, the Warcraft Mod Updater, Ubermoc UI and Ubermoc Forever.
 
 ## Build the plugin
 
