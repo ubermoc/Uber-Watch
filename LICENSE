@@ -5,16 +5,16 @@ The source code, compiled output, documentation and design in this repository an
 releases (the "Software") are the exclusive property of ubermoc.
 
 You may install the officially published release from
-https://github.com/ubermoc/Ubermoc-Warcraft-Mod-Updater through Decky Loader and use it
+https://github.com/ubermoc/Uber-Watch and use it
 for your own personal, non-commercial purposes, and you may read the source code.
 
 You may not copy, redistribute, modify or create derivative works of the Software
 without the prior written permission of ubermoc.
 
-The Software is provided "as is", without warranty of any kind. It installs third-party
-addons chosen by you, and ubermoc is not responsible for those addons.
+The Software is provided "as is", without warranty of any kind. It starts, stops and
+restarts services and a model server on your computer; use it at your own risk.
 
-Third-party addons, World of Warcraft and Decky Loader belong to their respective owners.
+Decky Loader and Strata belong to their respective owners.
 
 --------------------------------------------------------------------------------
 This project was started from decky-plugin-template, whose licence follows.
