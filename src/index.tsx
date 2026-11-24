@@ -60,6 +60,68 @@ function PluginUpdate() {
   );
 }
 
+type ModelInfo = { id: string; label: string; detail: string; available: boolean; why: string };
+type Models = {
+  installed: boolean; models: ModelInfo[]; current: string | null; note?: string; agents?: number;
+  switch: { state?: string; message?: string; label?: string };
+};
+const models = callable<[], Models>("models");
+const switchModel = callable<[string], Result>("switch_model");
+
+// Pick a model: the loaded one is stopped first (memory fits one large model), then the chosen one loads. Shows progress or the failure.
+function ModelPicker() {
+  const [m, setM] = useState<Models | null>(null);
+  const [open, setOpen] = useState(false);
+  const [err, setErr] = useState("");
+  const refresh = async () => { try { setM(await models()); } catch { /* shown as empty */ } };
+  useEffect(() => { refresh(); const t = setInterval(refresh, 3000); return () => clearInterval(t); }, []);
+  const state = m?.switch?.state;
+  const running = state === "stopping" || state === "loading";
+  const pick = async (id: string) => {
+    setErr(""); setOpen(false);
+    try { const r = await switchModel(id); if (!r.ok) setErr(r.error ?? "Failed."); } catch { setErr("Failed."); }
+    refresh();
+  };
+  const current = m?.models.find((x) => x.id === m.current);
+  return (
+    <PanelSection title="Load model">
+      {!m?.installed && m && <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>The model switcher is part of Uber Watch for the desktop. Install it first.</div></PanelSectionRow>}
+      {m?.installed && (
+        <>
+          <PanelSectionRow><Field label="Loaded" bottomSeparator="none">{current ? current.label : "nothing"}</Field></PanelSectionRow>
+          {m.note && <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>{m.note}</div></PanelSectionRow>}
+          {!!m.agents && current?.id.startsWith("strata:") && (
+            <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>
+              {m.agents} agent sessions use this model. Switching away leaves them without one until you switch back.
+            </div></PanelSectionRow>
+          )}
+          {(running || state === "failed" || err) && (
+            <PanelSectionRow>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>
+                {err || (running ? "Switching: " : state === "failed" ? "Switch failed: " : "") + (m.switch.message ?? "")}
+              </div>
+            </PanelSectionRow>
+          )}
+          <PanelSectionRow>
+            <ButtonItem layout="below" disabled={running} onClick={() => setOpen(!open)}
+              description="Stops the loaded model, then loads the one you pick. Only one large model fits in memory.">
+              {open ? "Hide the list" : "Choose a model"}
+            </ButtonItem>
+          </PanelSectionRow>
+          {open && m.models.map((x) => (
+            <PanelSectionRow {...({ key: x.id } as object)}>
+              <ButtonItem layout="below" disabled={!x.available || x.id === m.current || running}
+                description={[x.detail, x.available ? "" : x.why].filter(Boolean).join(" · ")} onClick={() => pick(x.id)}>
+                {(x.id === m.current ? "\u25cf " : "") + x.label}
+              </ButtonItem>
+            </PanelSectionRow>
+          ))}
+        </>
+      )}
+    </PanelSection>
+  );
+}
+
 const setNoResume = callable<[boolean, boolean], Result>("set_no_resume");
 
 const APPS: { name: string; what: string; url: string }[] = [
@@ -117,6 +179,7 @@ function Content() {
             description="Loads the last model again. If Unload paused Uber Watch, it starts watching again.">Reload model</ButtonItem>
         </PanelSectionRow>
       </PanelSection>
+      <ModelPicker />
       {(msg || s?.log) && (
         <PanelSection>
           <PanelSectionRow><div style={{ fontSize: "12px", opacity: 0.7 }}>{msg || s?.log}</div></PanelSectionRow>

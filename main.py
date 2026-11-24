@@ -110,6 +110,17 @@ def _model():
     return None, "not loaded"
 
 
+SWITCHER = os.path.join(HOME, ".local/bin/uber-watch-switch")  # comes with Uber Watch for the desktop
+
+
+def _switch_view():
+    """The model list, the loaded model and the progress of a switch, from uber-watch-switch (empty if it is not installed)."""
+    try:
+        return json.loads(_run([SWITCHER, "list", "--json"], 60).stdout)
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        return {}
+
+
 def _last_log():
     try:
         with open(LOG, "rb") as f:
@@ -138,6 +149,12 @@ class Plugin:
             preset, text = _model()
             if preset:
                 _save(last_preset=preset)
+            else:  # a model that Strata does not run (for example a video tool)?
+                cur = _switch_view().get("current")
+                if cur:
+                    return {"watching": _watching(), "loaded": True, "model": cur["label"] + (f" ({cur['note']})" if cur.get("note") else ""),
+                            "preset": None, "no_resume": os.path.exists(NO_RESUME), "no_resume_boot": os.path.exists(NO_RESUME_BOOT),
+                            "busy": Plugin.busy, "log": _last_log()}
             return {
                 "watching": _watching(),
                 "loaded": preset is not None,
@@ -148,6 +165,27 @@ class Plugin:
                 "busy": Plugin.busy,
                 "log": _last_log(),
             }
+        return await self._off(work)
+
+    async def models(self) -> dict:
+        """The models you can load (Strata presets and your own entries), the loaded one, and the progress of a switch."""
+        def work():
+            v = _switch_view()
+            cur = v.get("current") or {}
+            return {"installed": bool(v), "models": v.get("models", []), "current": cur.get("id"), "note": cur.get("note", ""),
+                    "agents": v.get("agents", 0), "switch": v.get("switch", {})}
+        return await self._off(work)
+
+    async def switch_model(self, model_id: str) -> dict:
+        """Stops the loaded model, then loads model_id. Runs on its own: the panel follows it through `models`."""
+        def work():
+            if not os.path.exists(SWITCHER):
+                return {"ok": False, "error": "Install Uber Watch for the desktop again (it brings the model switcher)."}
+            args = [SWITCHER, "switch", model_id]
+            if os.geteuid() == 0:
+                args = ["runuser", "-u", decky.DECKY_USER, "--", "env", f"HOME={HOME}", *args]
+            subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True, env=_env())
+            return {"ok": True}
         return await self._off(work)
 
     async def pause(self) -> dict:
@@ -252,14 +290,18 @@ class Plugin:
 
     async def unload(self) -> dict:
         def work():
-            preset = _model()[0] or _service_preset()
-            was_on = _watching()
-            _set_paused(True)  # first: a running watchdog would load the model again (lasts across reboots and mode switches)
-            _save(last_preset=preset, paused_by_unload=was_on)
             Plugin.busy = "Unloading"
             try:
-                _run(["timeout", "60", STRATA, "launch", "--stop"] + (["--preset", preset] if preset else []), 70)
-                subprocess.run(["pkill", "-TERM", "-f", "components/engine/[^ ]*/strata --serve"])
+                # stops whatever is loaded (a Strata model or another one) and pauses Uber Watch first
+                if os.path.exists(SWITCHER):
+                    _run([SWITCHER, "stop"], 320)
+                else:
+                    preset = _model()[0] or _service_preset()
+                    was_on = _watching()
+                    _set_paused(True)
+                    _save(last_preset=preset, paused_by_unload=was_on)
+                    _run(["timeout", "60", STRATA, "launch", "--stop"] + (["--preset", preset] if preset else []), 70)
+                    subprocess.run(["pkill", "-TERM", "-f", "components/.*(engine|shapes)/[^ ]*/strata[a-z0-9-]* --serve"])
             finally:
                 Plugin.busy = ""
             return {"ok": True}

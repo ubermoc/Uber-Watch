@@ -24,6 +24,7 @@ Built for the Strata local model server on Linux (Steam Deck and other handhelds
 | Resume Uber Watch | Starts watching again: restarts the model if it fails and continues cut-off sessions. |
 | Don't resume after a reboot | On: after a reboot or logout, sessions stay stopped until you continue them. |
 | Don't resume cut-off sessions | On: after a model restart or a crash, cut-off sessions stay stopped. |
+| Choose a model | Under **Load model**: lists every model you can load (Strata presets and your own entries). Pick one: the loaded model is stopped first, then the chosen one loads; the panel shows the progress or the failure. Needs the model switcher from Uber Watch for the desktop. |
 | Unload model | Unloads the model to free memory **and pauses Uber Watch**, so it doesn't load the model again. |
 | Reload model | Loads the last model again. If Unload paused Uber Watch, it **starts watching again**. |
 
@@ -44,6 +45,7 @@ The watchdog this panel controls comes with [Uber Watch for the desktop](https:/
 | File | Purpose |
 |---|---|
 | `~/.local/state/strata/watchdog.log` | what the watchdog did |
+| `~/.local/state/strata/switch.json` | progress of a model switch (shared with the tray) |
 | `~/.local/state/strata/tray-state.json` | the last loaded preset (shared by the tray and the panel) |
 | `~/.local/state/strata/paused` | exists = paused: the watchdog idles and loads nothing, across reboots and mode switches (shared by the tray and the panel) |
 | `~/.local/state/strata/no-resume` | exists = do not continue cut-off sessions after a model restart or a crash |
@@ -65,7 +67,7 @@ npm install && npm run build
 
 ## Honest status
 
-The panel's status and the no-resume switch were checked against a real system. Pause, Unload and Reload were written to match the tray icon and have not all been exercised from the panel. Tell me what you see.
+The panel's status and the no-resume switch were checked against a real system. The model picker's backend (`uber-watch-switch`) was tested switching between models on the desktop; the picker's buttons in the panel are built but not yet tried in game mode. Pause, Unload and Reload were written to match the tray icon and have not all been exercised from the panel. Tell me what you see.
 
 ## License
 

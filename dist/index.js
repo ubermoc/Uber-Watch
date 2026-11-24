@@ -133,6 +133,53 @@ function PluginUpdate() {
                 }
                 catch { /* shown above next time */ } } }, "Restart Decky Loader")))));
 }
+const models = callable("models");
+const switchModel = callable("switch_model");
+// Pick a model: the loaded one is stopped first (memory fits one large model), then the chosen one loads. Shows progress or the failure.
+function ModelPicker() {
+    const [m, setM] = SP_REACT.useState(null);
+    const [open, setOpen] = SP_REACT.useState(false);
+    const [err, setErr] = SP_REACT.useState("");
+    const refresh = async () => { try {
+        setM(await models());
+    }
+    catch { /* shown as empty */ } };
+    SP_REACT.useEffect(() => { refresh(); const t = setInterval(refresh, 3000); return () => clearInterval(t); }, []);
+    const state = m?.switch?.state;
+    const running = state === "stopping" || state === "loading";
+    const pick = async (id) => {
+        setErr("");
+        setOpen(false);
+        try {
+            const r = await switchModel(id);
+            if (!r.ok)
+                setErr(r.error ?? "Failed.");
+        }
+        catch {
+            setErr("Failed.");
+        }
+        refresh();
+    };
+    const current = m?.models.find((x) => x.id === m.current);
+    return (window.SP_REACT.createElement(DFL.PanelSection, { title: "Load model" },
+        !m?.installed && m && window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+            window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, "The model switcher is part of Uber Watch for the desktop. Install it first.")),
+        m?.installed && (window.SP_REACT.createElement(window.SP_REACT.Fragment, null,
+            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement(DFL.Field, { label: "Loaded", bottomSeparator: "none" }, current ? current.label : "nothing")),
+            m.note && window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, m.note)),
+            !!m.agents && current?.id.startsWith("strata:") && (window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } },
+                    m.agents,
+                    " agent sessions use this model. Switching away leaves them without one until you switch back."))),
+            (running || state === "failed" || err) && (window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.8 } }, err || (running ? "Switching: " : state === "failed" ? "Switch failed: " : "") + (m.switch.message ?? "")))),
+            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: running, onClick: () => setOpen(!open), description: "Stops the loaded model, then loads the one you pick. Only one large model fits in memory." }, open ? "Hide the list" : "Choose a model")),
+            open && m.models.map((x) => (window.SP_REACT.createElement(DFL.PanelSectionRow, { ...{ key: x.id } },
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: !x.available || x.id === m.current || running, description: [x.detail, x.available ? "" : x.why].filter(Boolean).join(" · "), onClick: () => pick(x.id) }, (x.id === m.current ? "\u25cf " : "") + x.label))))))));
+}
 const setNoResume = callable("set_no_resume");
 const APPS = [
     { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
@@ -184,6 +231,7 @@ function Content() {
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !s?.loaded, onClick: () => act(unload), description: "Unloads the model to free memory and pauses Uber Watch, so it doesn't load the model again." }, "Unload model")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !!s?.loaded, onClick: () => act(reload), description: "Loads the last model again. If Unload paused Uber Watch, it starts watching again." }, "Reload model"))),
+        window.SP_REACT.createElement(ModelPicker, null),
         (msg || s?.log) && (window.SP_REACT.createElement(DFL.PanelSection, null,
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log)))),
