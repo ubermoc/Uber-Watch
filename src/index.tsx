@@ -20,8 +20,6 @@ const APPS: { name: string; what: string; url: string }[] = [
   { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
   { name: "Ubermoc Speech", what: "Hold a button, speak, and your words are typed into any app.", url: "https://github.com/ubermoc/Ubermoc-Speech" },
   { name: "Ubermoc Warcraft Mod Updater", what: "Updates the Ubermoc addons for World of Warcraft.", url: "https://github.com/ubermoc/Ubermoc-Warcraft-Mod-Updater" },
-  { name: "Ubermoc UI", what: "A controller-first World of Warcraft interface.", url: "https://github.com/ubermoc/Ubermoc-UI" },
-  { name: "Ubermoc Forever", what: "A controller-first default look for World of Warcraft: Forever.", url: "https://github.com/ubermoc/Ubermoc-Forever" },
 ];
 
 function Content() {
@@ -71,7 +69,7 @@ function Content() {
       <PanelSection title="More from Ubermoc">
         <PanelSectionRow>
           <ButtonItem layout="below" onClick={() => setMore(!more)}>
-            {more ? "Hide downloads" : "Downloads: additional Uber apps"}
+            {more ? "Hide the list" : "Downloads: more Uber apps for game mode"}
           </ButtonItem>
         </PanelSectionRow>
         {more && APPS.map((a) => (

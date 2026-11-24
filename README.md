@@ -48,7 +48,7 @@ The watchdog this panel controls comes with [Uber Watch for the desktop](https:/
 
 ## More from Ubermoc
 
-At the bottom of the panel, **Downloads: additional Uber apps** opens a list with the desktop version of Uber Watch first, then Ubermoc Speech, the Warcraft Mod Updater, Ubermoc UI and Ubermoc Forever.
+At the bottom of the panel, **Downloads: more Uber apps for game mode** opens a list: the desktop version of Uber Watch first, then the other Decky Loader plugins (Ubermoc Speech and the Ubermoc Warcraft Mod Updater). Tapping one opens its GitHub page.
 
 ## Build the plugin
 
