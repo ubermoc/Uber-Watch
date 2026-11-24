@@ -1,0 +1,11 @@
+{
+  "name": "Ubermoc Watchdog",
+  "author": "ubermoc",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["utility"],
+    "description": "Pause or resume the model watchdog, unload and reload the local model, and choose whether cut-off sessions resume by themselves.",
+    "image": ""
+  }
+}
