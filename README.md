@@ -16,6 +16,16 @@ Built for the Strata local model server on Linux (Steam Deck and other handhelds
 - **Keeps your services up** (optional). List user services in `UBER_WATCH_UNITS` and it starts any that are stopped.
 - **Buttons.** Pause / Resume, Unload model (also pauses, or the watchdog would load it again), Reload model (loads the last preset and resumes if Unload paused it), and a switch "Don't resume sessions by itself".
 
+## The buttons, in plain words
+
+| Option | What it does |
+|---|---|
+| Pause Uber Watch | Stops watching. The model keeps running, but nothing restarts it if it fails. |
+| Resume Uber Watch | Starts watching again: restarts the model if it fails and continues cut-off sessions. |
+| Don't resume sessions by itself | On: after a restart or reboot, cut-off sessions stay stopped until you continue them. |
+| Unload model | Unloads the model to free memory **and pauses Uber Watch**, so it doesn't load the model again. |
+| Reload model | Loads the last model again. If Unload paused Uber Watch, it **starts watching again**. |
+
 ## Install
 
 **Game mode panel** (needs Decky Loader; asks for sudo once):

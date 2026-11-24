@@ -37,21 +37,26 @@ function Content() {
         <PanelSectionRow><div>{s ? (s.watching ? "Watching" : "Paused") : "Checking..."}</div></PanelSectionRow>
         <PanelSectionRow>
           {s?.watching
-            ? <ButtonItem layout="below" disabled={off} onClick={() => act(pause)}>Pause Uber Watch</ButtonItem>
-            : <ButtonItem layout="below" disabled={off} onClick={() => act(resume)}>Resume Uber Watch</ButtonItem>}
+            ? <ButtonItem layout="below" disabled={off} onClick={() => act(pause)}
+                description="Stops watching. The model keeps running, but nothing restarts it if it fails.">Pause Uber Watch</ButtonItem>
+            : <ButtonItem layout="below" disabled={off} onClick={() => act(resume)}
+                description="Starts watching again: restarts the model if it fails and continues cut-off sessions.">Resume Uber Watch</ButtonItem>}
         </PanelSectionRow>
         <PanelSectionRow>
           <ToggleField label="Don't resume sessions by itself" checked={!!s?.no_resume}
+            description="On: after a restart or reboot, cut-off sessions stay stopped until you continue them."
             onChange={(v: boolean) => act(() => setNoResume(v))} />
         </PanelSectionRow>
       </PanelSection>
       <PanelSection title="Model">
         <PanelSectionRow><div>{s?.busy ? s.busy + "..." : s ? s.model : "Checking..."}</div></PanelSectionRow>
         <PanelSectionRow>
-          <ButtonItem layout="below" disabled={off || !s?.loaded} onClick={() => act(unload)}>Unload model</ButtonItem>
+          <ButtonItem layout="below" disabled={off || !s?.loaded} onClick={() => act(unload)}
+            description="Unloads the model to free memory and pauses Uber Watch, so it doesn't load the model again.">Unload model</ButtonItem>
         </PanelSectionRow>
         <PanelSectionRow>
-          <ButtonItem layout="below" disabled={off || !!s?.loaded} onClick={() => act(reload)}>Reload model</ButtonItem>
+          <ButtonItem layout="below" disabled={off || !!s?.loaded} onClick={() => act(reload)}
+            description="Loads the last model again. If Unload paused Uber Watch, it starts watching again.">Reload model</ButtonItem>
         </PanelSectionRow>
       </PanelSection>
       {(msg || s?.log) && (

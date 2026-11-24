@@ -119,17 +119,17 @@ function Content() {
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", null, s ? (s.watching ? "Watching" : "Paused") : "Checking...")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null, s?.watching
-                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause) }, "Pause Uber Watch")
-                : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume) }, "Resume Uber Watch")),
+                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause), description: "Stops watching. The model keeps running, but nothing restarts it if it fails." }, "Pause Uber Watch")
+                : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume), description: "Starts watching again: restarts the model if it fails and continues cut-off sessions." }, "Resume Uber Watch")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
-                window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume sessions by itself", checked: !!s?.no_resume, onChange: (v) => act(() => setNoResume(v)) }))),
+                window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume sessions by itself", checked: !!s?.no_resume, description: "On: after a restart or reboot, cut-off sessions stay stopped until you continue them.", onChange: (v) => act(() => setNoResume(v)) }))),
         window.SP_REACT.createElement(DFL.PanelSection, { title: "Model" },
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", null, s?.busy ? s.busy + "..." : s ? s.model : "Checking...")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
-                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !s?.loaded, onClick: () => act(unload) }, "Unload model")),
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !s?.loaded, onClick: () => act(unload), description: "Unloads the model to free memory and pauses Uber Watch, so it doesn't load the model again." }, "Unload model")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
-                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !!s?.loaded, onClick: () => act(reload) }, "Reload model"))),
+                window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off || !!s?.loaded, onClick: () => act(reload), description: "Loads the last model again. If Unload paused Uber Watch, it starts watching again." }, "Reload model"))),
         (msg || s?.log) && (window.SP_REACT.createElement(DFL.PanelSection, null,
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log))))));
