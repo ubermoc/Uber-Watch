@@ -128,7 +128,9 @@ function Content() {
                 ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause), description: "Stops watching. The model keeps running, but nothing restarts it if it fails." }, "Pause Uber Watch")
                 : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume), description: "Starts watching again: restarts the model if it fails and continues cut-off sessions." }, "Resume Uber Watch")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
-                window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume sessions by itself", checked: !!s?.no_resume, description: "On: after a restart or reboot, cut-off sessions stay stopped until you continue them.", onChange: (v) => act(() => setNoResume(v)) }))),
+                window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume after a reboot", checked: !!s?.no_resume_boot, description: "On: after a reboot or logout, sessions stay stopped until you continue them.", onChange: (v) => act(() => setNoResume(v, true)) })),
+            window.SP_REACT.createElement(DFL.PanelSectionRow, null,
+                window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume cut-off sessions", checked: !!s?.no_resume, description: "On: after a model restart or a crash, cut-off sessions stay stopped.", onChange: (v) => act(() => setNoResume(v, false)) }))),
         window.SP_REACT.createElement(DFL.PanelSection, { title: "Model" },
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", null, s?.busy ? s.busy + "..." : s ? s.model : "Checking...")),

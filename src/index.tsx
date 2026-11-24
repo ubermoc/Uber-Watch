@@ -5,7 +5,7 @@ import { FaShieldAlt } from "react-icons/fa";
 
 type Status = {
   watching: boolean; loaded: boolean; model: string; preset: string | null;
-  no_resume: boolean; busy: string; log: string;
+  no_resume: boolean; no_resume_boot: boolean; busy: string; log: string;
 };
 type Result = { ok: boolean; error?: string };
 
@@ -14,7 +14,7 @@ const pause = callable<[], Result>("pause");
 const resume = callable<[], Result>("resume");
 const unload = callable<[], Result>("unload");
 const reload = callable<[], Result>("reload");
-const setNoResume = callable<[boolean], Result>("set_no_resume");
+const setNoResume = callable<[boolean, boolean], Result>("set_no_resume");
 
 const APPS: { name: string; what: string; url: string }[] = [
   { name: "Uber Watch for the desktop", what: "The same watchdog with a tray icon, for your Linux desktop.", url: "https://github.com/ubermoc/Uber-Watch-Desktop" },
@@ -50,9 +50,14 @@ function Content() {
                 description="Starts watching again: restarts the model if it fails and continues cut-off sessions.">Resume Uber Watch</ButtonItem>}
         </PanelSectionRow>
         <PanelSectionRow>
-          <ToggleField label="Don't resume sessions by itself" checked={!!s?.no_resume}
-            description="On: after a restart or reboot, cut-off sessions stay stopped until you continue them."
-            onChange={(v: boolean) => act(() => setNoResume(v))} />
+          <ToggleField label="Don't resume after a reboot" checked={!!s?.no_resume_boot}
+            description="On: after a reboot or logout, sessions stay stopped until you continue them."
+            onChange={(v: boolean) => act(() => setNoResume(v, true))} />
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <ToggleField label="Don't resume cut-off sessions" checked={!!s?.no_resume}
+            description="On: after a model restart or a crash, cut-off sessions stay stopped."
+            onChange={(v: boolean) => act(() => setNoResume(v, false))} />
         </PanelSectionRow>
       </PanelSection>
       <PanelSection title="Model">

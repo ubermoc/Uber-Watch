@@ -14,7 +14,7 @@ Built for the Strata local model server on Linux (Steam Deck and other handhelds
 - **Watches the model.** Every 20 seconds it asks the server for its model list. After about a minute of failed checks, or right after a GPU reset, it stops the old process and loads the preset again. It gives up for 10 minutes after 5 restarts in an hour.
 - **Continues what was cut off.** When the model is back, when the service starts (after a reboot or logout), and when a watched service comes back after a crash, it continues every agent session whose last turn was cut off. A session you stopped yourself with Esc is left alone, and so is one that was continued in the last 10 minutes.
 - **Keeps your services up** (optional). List user services in `UBER_WATCH_UNITS` and it starts any that are stopped.
-- **Buttons.** Pause / Resume, Unload model (also pauses, or the watchdog would load it again), Reload model (loads the last preset and resumes if Unload paused it), and a switch "Don't resume sessions by itself".
+- **Buttons.** Pause / Resume, Unload model (also pauses, or the watchdog would load it again), Reload model (loads the last preset and resumes if Unload paused it), and two switches: no resume after a reboot, no resume of cut-off sessions.
 
 ## The buttons, in plain words
 
@@ -22,7 +22,8 @@ Built for the Strata local model server on Linux (Steam Deck and other handhelds
 |---|---|
 | Pause Uber Watch | Stops watching. The model keeps running, but nothing restarts it if it fails. |
 | Resume Uber Watch | Starts watching again: restarts the model if it fails and continues cut-off sessions. |
-| Don't resume sessions by itself | On: after a restart or reboot, cut-off sessions stay stopped until you continue them. |
+| Don't resume after a reboot | On: after a reboot or logout, sessions stay stopped until you continue them. |
+| Don't resume cut-off sessions | On: after a model restart or a crash, cut-off sessions stay stopped. |
 | Unload model | Unloads the model to free memory **and pauses Uber Watch**, so it doesn't load the model again. |
 | Reload model | Loads the last model again. If Unload paused Uber Watch, it **starts watching again**. |
 
@@ -44,7 +45,8 @@ The watchdog this panel controls comes with [Uber Watch for the desktop](https:/
 |---|---|
 | `~/.local/state/strata/watchdog.log` | what the watchdog did |
 | `~/.local/state/strata/tray-state.json` | the last loaded preset (shared by the tray and the panel) |
-| `~/.local/state/strata/no-resume` | exists = never continue sessions by itself |
+| `~/.local/state/strata/no-resume` | exists = do not continue cut-off sessions after a model restart or a crash |
+| `~/.local/state/strata/no-resume-reboot` | exists = do not continue sessions after a reboot, a logout or a restart of the watchdog |
 
 ## More from Ubermoc
 

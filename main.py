@@ -14,7 +14,8 @@ HOME = decky.DECKY_USER_HOME
 STRATA = os.path.join(HOME, ".local/bin/strata")
 STATE_DIR = os.path.join(HOME, ".local/state/strata")
 STATE = os.path.join(STATE_DIR, "tray-state.json")  # shared with the tray icon
-NO_RESUME = os.path.join(STATE_DIR, "no-resume")
+NO_RESUME = os.path.join(STATE_DIR, "no-resume")  # no resume after a model restart or a crash
+NO_RESUME_BOOT = os.path.join(STATE_DIR, "no-resume-reboot")  # no resume after a reboot or a restart of the watchdog
 LOG = os.path.join(STATE_DIR, "watchdog.log")
 
 
@@ -102,6 +103,7 @@ class Plugin:
                 "model": text,
                 "preset": preset,
                 "no_resume": os.path.exists(NO_RESUME),
+                "no_resume_boot": os.path.exists(NO_RESUME_BOOT),
                 "busy": Plugin.busy,
                 "log": _last_log(),
             }
@@ -121,13 +123,14 @@ class Plugin:
             return {"ok": True}
         return await self._off(work)
 
-    async def set_no_resume(self, on: bool) -> dict:
+    async def set_no_resume(self, on: bool, boot: bool = False) -> dict:
         def work():
+            flag = NO_RESUME_BOOT if boot else NO_RESUME
             os.makedirs(STATE_DIR, exist_ok=True)
             if on:
-                open(NO_RESUME, "w").close()
-            elif os.path.exists(NO_RESUME):
-                os.remove(NO_RESUME)
+                open(flag, "w").close()
+            elif os.path.exists(flag):
+                os.remove(flag)
             return {"ok": True}
         return await self._off(work)
 
