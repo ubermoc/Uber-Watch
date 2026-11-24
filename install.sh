@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs the plugin into Decky Loader (needs sudo: the plugins folder belongs to root). Run from this folder.
 set -e
-dest="$HOME/homebrew/plugins/Ubermoc Watchdog"
+dest="$HOME/homebrew/plugins/Uber Watch"
 sudo rm -rf "$dest"
 sudo mkdir -p "$dest"
 sudo cp -r plugin.json package.json main.py LICENSE dist "$dest/"

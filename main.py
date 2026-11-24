@@ -1,5 +1,5 @@
 # Copyright (c) 2026 ubermoc. All rights reserved. See LICENSE.
-"""Decky backend: controls the model watchdog (a user service) and the local model. Runs as the desktop user."""
+"""Decky backend: Uber Watch: controls the watchdog (a user service) and the local model. Runs as the desktop user."""
 
 import asyncio
 import json

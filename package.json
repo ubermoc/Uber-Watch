@@ -1,5 +1,5 @@
 {
-  "name": "ubermoc-watchdog-plugin",
+  "name": "uber-watch",
   "version": "0.1.0",
   "description": "Control the model watchdog from Gaming Mode",
   "type": "module",

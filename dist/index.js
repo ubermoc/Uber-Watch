@@ -1,4 +1,4 @@
-const manifest = {"name":"Ubermoc Watchdog"};
+const manifest = {"name":"Uber Watch"};
 const API_VERSION = 2;
 const internalAPIConnection = window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit;
 if (!internalAPIConnection) {
@@ -115,12 +115,12 @@ function Content() {
     };
     const off = working || !!s?.busy;
     return (window.SP_REACT.createElement(window.SP_REACT.Fragment, null,
-        window.SP_REACT.createElement(DFL.PanelSection, { title: "Watchdog" },
+        window.SP_REACT.createElement(DFL.PanelSection, { title: "Uber Watch" },
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement("div", null, s ? (s.watching ? "Watching" : "Paused") : "Checking...")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null, s?.watching
-                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause) }, "Pause watchdog")
-                : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume) }, "Resume watchdog")),
+                ? window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(pause) }, "Pause Uber Watch")
+                : window.SP_REACT.createElement(DFL.ButtonItem, { layout: "below", disabled: off, onClick: () => act(resume) }, "Resume Uber Watch")),
             window.SP_REACT.createElement(DFL.PanelSectionRow, null,
                 window.SP_REACT.createElement(DFL.ToggleField, { label: "Don't resume sessions by itself", checked: !!s?.no_resume, onChange: (v) => act(() => setNoResume(v)) }))),
         window.SP_REACT.createElement(DFL.PanelSection, { title: "Model" },
@@ -135,8 +135,8 @@ function Content() {
                 window.SP_REACT.createElement("div", { style: { fontSize: "12px", opacity: 0.7 } }, msg || s?.log))))));
 }
 var index = definePlugin(() => ({
-    name: "Ubermoc Watchdog",
-    titleView: window.SP_REACT.createElement("div", { className: DFL.staticClasses.Title }, "Ubermoc Watchdog"),
+    name: "Uber Watch",
+    titleView: window.SP_REACT.createElement("div", { className: DFL.staticClasses.Title }, "Uber Watch"),
     content: window.SP_REACT.createElement(Content, null),
     icon: window.SP_REACT.createElement(FaShieldAlt, null),
     onDismount() { },

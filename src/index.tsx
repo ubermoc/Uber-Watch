@@ -33,12 +33,12 @@ function Content() {
 
   return (
     <>
-      <PanelSection title="Watchdog">
+      <PanelSection title="Uber Watch">
         <PanelSectionRow><div>{s ? (s.watching ? "Watching" : "Paused") : "Checking..."}</div></PanelSectionRow>
         <PanelSectionRow>
           {s?.watching
-            ? <ButtonItem layout="below" disabled={off} onClick={() => act(pause)}>Pause watchdog</ButtonItem>
-            : <ButtonItem layout="below" disabled={off} onClick={() => act(resume)}>Resume watchdog</ButtonItem>}
+            ? <ButtonItem layout="below" disabled={off} onClick={() => act(pause)}>Pause Uber Watch</ButtonItem>
+            : <ButtonItem layout="below" disabled={off} onClick={() => act(resume)}>Resume Uber Watch</ButtonItem>}
         </PanelSectionRow>
         <PanelSectionRow>
           <ToggleField label="Don't resume sessions by itself" checked={!!s?.no_resume}
@@ -64,8 +64,8 @@ function Content() {
 }
 
 export default definePlugin(() => ({
-  name: "Ubermoc Watchdog",
-  titleView: <div className={staticClasses.Title}>Ubermoc Watchdog</div>,
+  name: "Uber Watch",
+  titleView: <div className={staticClasses.Title}>Uber Watch</div>,
   content: <Content />,
   icon: <FaShieldAlt />,
   onDismount() {},
